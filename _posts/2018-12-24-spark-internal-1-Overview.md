@@ -1,3 +1,16 @@
+---
+layout:     post
+title:      "Spark Internal —— Overview 篇"
+subtitle:   "Spark 内幕 SourceResearch"
+date:       2018-12-24
+author:     "JerryLead"
+header-img: "img/post-bg-os-metro.jpg"
+catalog: true
+tags:
+  - Spark 内幕
+  - SourceResearch 
+---
+
 # 概览
 拿到系统后，部署系统是第一件事，那么系统部署成功以后，**各个节点都启动了哪些服务？**
 

@@ -1,3 +1,17 @@
+---
+layout:     post
+title:      "Spark Internal —— Introduction 篇"
+subtitle:   "信息、载体、抽象、UI 设计乱谈"
+date:       2018-12-24
+author:     "JerryLead"
+header-img: "img/post-bg-os-metro.jpg"
+catalog: true
+tags:
+  - Spark 内幕
+  - SourceResearch 
+---
+
+
 # Spark Internals
 
 Spark Version: 1.0.2  
