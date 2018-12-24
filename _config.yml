@@ -1,11 +1,11 @@
 # Site settings
-title: Wenas Blog
-SEOTitle: 维纳斯的博客 | Wenas Blog
+title: WeNas Blog
+SEOTitle: 维纳斯的博客 | WeNas Blog
 header-img: img/home-bg.jpg
 email: yclxf@yeah.com
-description: "关于大数据程序与设计、算法等学习 | 维纳斯，Software Engineer，Bigdata | 这里是 @wenasgz 的博客，与你一起发现更大的世界。"
-keyword: "大数据程序与设计,算法等学习 @wenasgz, 维纳斯，Software Engineer，Bigdata, 互联网,设计"
-url: "https://wenasgz.github.io"              # your host, for absolute URL
+description: "关于大数据程序与设计、算法等学习 | 维纳斯，Software Engineer，Bigdata | 这里是 @WeNasgz 的博客，与你一起发现更大的世界。"
+keyword: "大数据程序与设计,算法等学习 @WeNasgz, 维纳斯，Software Engineer，Bigdata, 互联网,设计"
+url: "https://WeNasgz.github.io"              # your host, for absolute URL
 baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
 
 # Publish posts or collection documents with a future date.
@@ -13,11 +13,11 @@ future: true
 
 # SNS settings
 RSS: false
-weibo_username:     wenasgz
-zhihu_username:     wenasgz
-github_username:    wenasgz
-twitter_username:   wenasgz
-#facebook_username:  wenasgz
+weibo_username:     WeNasgz
+zhihu_username:     WeNasgz
+github_username:    WeNasgz
+twitter_username:   WeNasgz
+#facebook_username:  WeNasgz
 #linkedin_username:  firstname-lastname-idxxxx
 
 
@@ -72,7 +72,7 @@ netease_comment: false
 
 # Google Analytics
 ga_track_id: ''            # Format: UA-xxxxxx-xx
-ga_domain: wenasgz.github.io
+ga_domain: WeNasgz.github.io
 
 
 
