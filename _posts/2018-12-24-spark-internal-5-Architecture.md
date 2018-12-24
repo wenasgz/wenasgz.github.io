@@ -1,3 +1,16 @@
+---
+layout:     post
+title:      "Spark Internal - Architecture 篇"
+subtitle:   "架构"
+date:       2018-12-24
+author:     "JerryLead"
+header-img: "img/post-bg-os-metro.jpg"
+catalog: true
+tags:
+  - Spark 内幕
+  - SourceResearch 
+---
+
 # 架构
 前三章从 job 的角度介绍了用户写的 program 如何一步步地被分解和执行。这一章主要从架构的角度来讨论 master，worker，driver 和 executor 之间怎么协调来完成整个 job 的运行。
 
@@ -7,7 +20,7 @@
 ## 部署图
 重新贴一下 Overview 中给出的部署图：
 
-![deploy](PNGfigures/deploy.png)
+![deploy](/img/blog/sparkinternal/deploy.png)
 
 接下来分阶段讨论并细化这个图。
 
@@ -15,7 +28,7 @@
 ## Job 提交
 下图展示了driver program（假设在 master node 上运行）如何生成 job，并提交到 worker node 上执行。
 
-![JobSubmission](PNGfigures/JobSubmission.png)
+![JobSubmission](/img/blog/sparkinternal/JobSubmission.png)
 
 Driver 端的逻辑如果用代码表示：
 ```scala
@@ -74,7 +87,7 @@ coarseGrainedExecutorBackend ! LaunchTask(serializedTask)
 
 下图展示了 task 被分配到 worker node 上后的执行流程及 driver 如何处理 task 的 result。
 
-![TaskExecution](PNGfigures/taskexecution.png)
+![TaskExecution](/img/blog/sparkinternal/taskexecution.png)
 
 Executor 收到 serialized 的 task 后，先 deserialize 出正常的 task，然后运行 task 得到其执行结果 directResult，这个结果要送回到 driver 那里。但是通过 Actor 发送的数据包不宜过大，**如果 result 比较大（比如 groupByKey 的 result）先把 result 存放到本地的“内存＋磁盘”上，由 blockManager 来管理，只把存储位置信息（indirectResult）发送给 driver**，driver 需要实际的 result 的时候，会通过 HTTP 去 fetch。如果 result 不大（小于`spark.akka.frameSize = 10MB`），那么直接发送给 driver。
 
@@ -147,7 +160,7 @@ After driver receives StatusUpdate(result)
 
 **问题：reducer 怎么知道要去哪里 fetch 数据？**
 
-![readMapStatus](PNGfigures/readMapStatus.png)
+![readMapStatus](/img/blog/sparkinternal/readMapStatus.png)
 reducer 首先要知道 parent stage 中 ShuffleMapTask 输出的 FileSegments 在哪个节点。**这个信息在 ShuffleMapTask 完成时已经送到了 driver 的 mapOutputTrackerMaster，并存放到了 mapStatuses: HashMap<stageId, Array[MapStatus]> 里面**，给定 stageId，可以获取该  stage 中 ShuffleMapTasks 生成的 FileSegments 信息 Array[MapStatus]，通过 Array(taskId) 就可以得到某个 task 输出的 FileSegments 位置（blockManagerId）及每个 FileSegment 大小。
 
 当 reducer 需要 fetch 输入数据的时候，会首先调用 blockStoreShuffleFetcher 去获取输入数据（FileSegments）的位置。blockStoreShuffleFetcher 通过调用本地的 MapOutputTrackerWorker 去完成这个任务，MapOutputTrackerWorker 使用 mapOutputTrackerMasterActorRef 来与 mapOutputTrackerMasterActor 通信获取 MapStatus 信息。blockStoreShuffleFetcher 对获取到的 MapStatus 信息进行加工，提取出该 reducer 应该去哪些节点上获取哪些 FileSegment 的信息，这个信息存放在 blocksByAddress 里面。之后，blockStoreShuffleFetcher 将获取 FileSegment 数据的任务交给 basicBlockFetcherIterator。
@@ -163,7 +176,7 @@ rdd.iterator()
 => itr = basicBlockFetcherIterator.flatMap(unpackBlock)
 ```
 
-![blocksByAddress](PNGfigures/blocksByAddress.png)
+![blocksByAddress](/img/blog/sparkinternal/blocksByAddress.png)
 
 basicBlockFetcherIterator 收到获取数据的任务后，会生成一个个 fetchRequest，**每个 fetchRequest 包含去某个节点获取若干个 FileSegments 的任务。**图中展示了 reducer-2 需要从三个 worker node 上获取所需的白色 FileSegment (FS)。总的数据获取任务由 blocksByAddress 表示，要从第一个 node 获取 4 个，从第二个 node 获取 3 个，从第三个 node 获取 4 个。
 
@@ -192,7 +205,7 @@ In basicBlockFetcherIterator:
 
 **reducer 如何将 fetchRequest 信息发送到目标节点？目标节点如何处理 fetchRequest 信息，如何读取 FileSegment 并回送给 reducer？**
 
-![fetchrequest](PNGfigures/fetchrequest.png)
+![fetchrequest](/img/blog/sparkinternal/fetchrequest.png)
 
 rdd.iterator() 碰到 ShuffleDependency 时会调用 BasicBlockFetcherIterator 去获取 FileSegments。BasicBlockFetcherIterator 使用 blockManager 中的 connectionManager 将 fetchRequest 发送给其他节点的 connectionManager。connectionManager 之间使用 NIO 模式通信。其他节点，比如 worker node 2 上的 connectionManager 收到消息后，会交给 blockManagerWorker 处理，blockManagerWorker 使用 blockManager 中的 diskStore 去本地磁盘上读取 fetchRequest 要求的 FileSegments，然后仍然通过 connectionManager 将 FileSegments 发送回去。如果使用了 FileConsolidation，diskStore 还需要 shuffleBlockManager 来提供 blockId 所在的具体位置。如果 FileSegment 不超过 `spark.storage.memoryMapThreshold=8KB` ，那么 diskStore 在读取 FileSegment 的时候会直接将 FileSegment 放到内存中，否则，会使用 RandomAccessFile 中 FileChannel 的内存映射方法来读取 FileSegment（这样可以将大的 FileSegment 加载到内存）。
 

@@ -1,7 +1,20 @@
+---
+layout:     post
+title:      "Spark Internal - JobLogicPlan 篇"
+subtitle:   "Job 逻辑执行图"
+date:       2018-12-24
+author:     "JerryLead"
+header-img: "img/post-bg-os-metro.jpg"
+catalog: true
+tags:
+  - Spark 内幕
+  - SourceResearch 
+---
+
 # Job 逻辑执行图
 
 ## General logical plan
-![deploy](PNGfigures/GeneralLogicalPlan.png)
+![deploy](/img/blog/sparkinternal/GeneralLogicalPlan.png)
 
 典型的 Job 逻辑执行图如上所示，经过下面四个步骤可以得到最终执行结果：
 - 从数据源（可以是本地 file，内存数据结构， HDFS，HBase 等）读取数据创建最初的 RDD。上一章例子中的 parallelize() 相当于 createRDD()。
@@ -66,7 +79,7 @@ RDD 之间的数据依赖问题实际包括三部分：
 
 再次考虑第三个问题，RDD x 中每个 partition 可以依赖于 parent RDD 中一个或者多个 partition。而且这个依赖可以是完全依赖或者部分依赖。部分依赖指的是 parent RDD 中某 partition 中一部分数据与 RDD x 中的一个 partition 相关，另一部分数据与 RDD x 中的另一个 partition 相关。下图展示了完全依赖和部分依赖。
 
-![Dependency](PNGfigures/Dependency.png)
+![Dependency](/img/blog/sparkinternal/Dependency.png)
 
 前三个是完全依赖，RDD x 中的 partition 与 parent RDD 中的 partition/partitions 完全相关。最后一个是部分依赖，RDD x 中的 partition 只与 parent RDD 中的 partition 一部分数据相关，另一部分数据与 RDD x 中的其他 partition 相关。
 
@@ -93,7 +106,7 @@ RDD 之间的数据依赖问题实际包括三部分：
 
 **如何计算得到 RDD x 中的数据（records）？**下图展示了 OneToOneDependency 的数据依赖，虽然 partition 和 partition 之间是 1:1，但不代表计算 records 的时候也是读一个 record 计算一个 record。 下图右边上下两个 pattern 之间的差别类似于下面两个程序的差别：
 
-![Dependency](PNGfigures/OneToOneDependency.png)
+![Dependency](/img/blog/sparkinternal/OneToOneDependency.png)
 
 code1 of iter.f()
 ```java
@@ -110,14 +123,14 @@ f(array)
 
 **1) union(otherRDD)**
 
-![union](PNGfigures/union.png)
+![union](/img/blog/sparkinternal/union.png)
 
 union() 将两个 RDD 简单合并在一起，不改变 partition 里面的数据。RangeDependency 实际上也是 1:1，只是为了访问 union() 后的 RDD 中的 partition 方便，保留了原始 RDD 的 range 边界。
 
 
 **2) groupByKey(numPartitions)**
 
-![groupByKey](PNGfigures/groupByKey.png)
+![groupByKey](/img/blog/sparkinternal/groupByKey.png)
 
 上一章已经介绍了 groupByKey 的数据依赖，这里算是*温故而知新* 吧。
 
@@ -136,19 +149,19 @@ val pairs = sc.parallelize(List(1, 2, 3, 4, 5), 3)
 
 **2) reduceByKey(func, numPartitions)**
 
-![reduceByKey](PNGfigures/reduceByKey.png)
+![reduceByKey](/img/blog/sparkinternal/reduceByKey.png)
 
 reduceByKey() 相当于传统的 MapReduce，整个数据流也与 Hadoop 中的数据流基本一样。reduceByKey() 默认在 map 端开启 combine()，因此在 shuffle 之前先通过 mapPartitions 操作进行 combine，得到 MapPartitionsRDD，然后 shuffle 得到 ShuffledRDD，然后再进行 reduce（通过 aggregate + mapPartitions() 操作来实现）得到 MapPartitionsRDD。
 
 **3) distinct(numPartitions)**
 
-![distinct](PNGfigures/distinct.png)
+![distinct](/img/blog/sparkinternal/distinct.png)
 
 distinct() 功能是 deduplicate RDD 中的所有的重复数据。由于重复数据可能分散在不同的 partition 里面，因此需要 shuffle 来进行 aggregate 后再去重。然而，shuffle 要求数据类型是 `<K, V>`。如果原始数据只有 Key（比如例子中 record 只有一个整数），那么需要补充成 `<K, null>`。这个补充过程由 map() 操作完成，生成 MappedRDD。然后调用上面的 reduceByKey() 来进行 shuffle，在 map 端进行 combine，然后 reduce 进一步去重，生成 MapPartitionsRDD。最后，将 `<K, null>` 还原成 K，仍然由 map() 完成，生成 MappedRDD。蓝色的部分就是调用的 reduceByKey()。
 
 **4) cogroup(otherRDD, numPartitions)**
 
-![cogroup](PNGfigures/cogroup.png)
+![cogroup](/img/blog/sparkinternal/cogroup.png)
 
 与 groupByKey() 不同，cogroup() 要 aggregate 两个或两个以上的 RDD。**那么 CoGroupedRDD 与 RDD a 和 RDD b 的关系都必须是 ShuffleDependency 么？是否存在 OneToOneDependency？**
 
@@ -168,13 +181,13 @@ distinct() 功能是 deduplicate RDD 中的所有的重复数据。由于重复�
 
 **5) intersection(otherRDD)**
 
-![intersection](PNGfigures/intersection.png)
+![intersection](/img/blog/sparkinternal/intersection.png)
 
 intersection() 功能是抽取出 RDD a 和 RDD b 中的公共数据。先使用 map() 将 RDD[T] 转变成 RDD[(T, null)]，这里的 T 只要不是 Array 等集合类型即可。接着，进行 a.cogroup(b)，蓝色部分与前面的 cogroup() 一样。之后再使用 filter() 过滤掉 [iter(groupA()), iter(groupB())] 中 groupA 或 groupB 为空的 records，得到 FilteredRDD。最后，使用 keys() 只保留 key 即可，得到 MappedRDD。
 
 6) **join(otherRDD, numPartitions)**
 
-![join](PNGfigures/join.png)
+![join](/img/blog/sparkinternal/join.png)
 
 join() 将两个 RDD[(K, V)] 按照 SQL 中的 join 方式聚合在一起。与 intersection() 类似，首先进行 cogroup()，得到`<K,  (Iterable[V1], Iterable[V2])>`类型的 MappedValuesRDD，然后对 Iterable[V1] 和 Iterable[V2] 做笛卡尔集，并将集合 flat() 化。
 
@@ -182,7 +195,7 @@ join() 将两个 RDD[(K, V)] 按照 SQL 中的 join 方式聚合在一起。与 
 
 **7) sortByKey(ascending, numPartitions)**
 
-![sortByKey](PNGfigures/sortByKey.png)
+![sortByKey](/img/blog/sparkinternal/sortByKey.png)
 
 sortByKey() 将 RDD[(K, V)] 中的 records 按 key 排序，ascending = true 表示升序，false 表示降序。目前 sortByKey() 的数据依赖很简单，先使用 shuffle 将 records 聚集在一起（放到对应的 partition 里面），然后将 partition 内的所有 records 按 key 排序，最后得到的 MapPartitionsRDD 中的 records 就有序了。
 
@@ -190,7 +203,7 @@ sortByKey() 将 RDD[(K, V)] 中的 records 按 key 排序，ascending = true 表
 
 **8) cartesian(otherRDD)**
 
-![cartesian](PNGfigures/Cartesian.png)
+![cartesian](/img/blog/sparkinternal/Cartesian.png)
 
 Cartesian 对两个 RDD 做笛卡尔集，生成的 CartesianRDD 中 partition 个数 = partitionNum(RDD a) * partitionNum(RDD b)。
 
@@ -200,7 +213,7 @@ Cartesian 对两个 RDD 做笛卡尔集，生成的 CartesianRDD 中 partition �
 
 **9) coalesce(numPartitions, shuffle = false)**
 
-![Coalesce](PNGfigures/Coalesce.png)
+![Coalesce](/img/blog/sparkinternal/Coalesce.png)
 
 coalesce() 可以将 parent RDD 的 partition 个数进行调整，比如从 5 个减少到 3 个，或者从 5 个增加到 10 个。需要注意的是当 shuffle = false 的时候，是不能增加 partition 个数的（不能从 5 个变为 10 个）。
 

@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "Spark Internal —— Introduction 篇"
-subtitle:   "信息、载体、抽象、UI 设计乱谈"
+subtitle:   "介绍"
 date:       2018-12-24
 author:     "JerryLead"
 header-img: "img/post-bg-os-metro.jpg"

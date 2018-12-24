@@ -1,3 +1,16 @@
+---
+layout:     post
+title:      "Spark Internal - JobPhysicalPlan 篇"
+subtitle:   "Job 物理执行图"
+date:       2018-12-24
+author:     "JerryLead"
+header-img: "img/post-bg-os-metro.jpg"
+catalog: true
+tags:
+  - Spark 内幕
+  - SourceResearch 
+---
+
 # Job 物理执行图
 
 在 Overview 里我们初步介绍了 DAG 型的物理执行图，里面包含 stages 和 tasks。这一章主要解决的问题是：
@@ -6,7 +19,7 @@
 
 ## 一个复杂 job 的逻辑执行图
 
-![ComplexJob](PNGfigures/ComplexJob.png)
+![ComplexJob](/img/blog/sparkinternal/ComplexJob.png)
 
 代码贴在本章最后。**给定这样一个复杂数据依赖图，如何合理划分 stage，并确定 task 的类型和个数？**
 
@@ -14,7 +27,7 @@
 
 仔细观察一下逻辑执行图会发现：在每个 RDD 中，每个 partition 是独立的，也就是说在 RDD 内部，每个 partition 的数据依赖各自不会相互干扰。因此，一个大胆的想法是将整个流程图看成一个 stage，为最后一个 finalRDD 中的每个 partition 分配一个 task。图示如下：
 
-![ComplexTask](../PNGfigures/ComplexTask.png)
+![ComplexTask](..//img/blog/sparkinternal/ComplexTask.png)
 
 所有的粗箭头组合成第一个 task，该 task 计算结束后顺便将 CoGroupedRDD 中已经计算得到的第二个和第三个 partition 存起来。之后第二个 task（细实线）只需计算两步，第三个 task（细虚线）也只需要计算两步，最后得到结果。
 
@@ -27,11 +40,11 @@
 
 更进一步，从 record 粒度来讲，如下图中，第一个 pattern 中先算 g(f(record1))，然后原始的 record1 和 f(record1) 都可以丢掉，然后再算 g(f(record2))，丢掉中间结果，最后算 g(f(record3))。对于第二个 pattern 中的 g，record1 进入 g 后，理论上可以丢掉（除非被手动 cache）。其他 pattern 同理。
 
-![Dependency](PNGfigures/pipeline.png)
+![Dependency](/img/blog/sparkinternal/pipeline.png)
 
 回到 stage 和 task 的划分问题，上面不靠谱想法的主要问题是碰到 ShuffleDependency 后无法进行 pipeline。那么只要在 ShuffleDependency 处断开，就只剩 NarrowDependency，而 NarrowDependency chain 是可以进行 pipeline 的。按照此思想，上面 ComplexJob 的划分图如下：
 
-![ComplextStage](PNGfigures/ComplexJobStage.png)
+![ComplextStage](/img/blog/sparkinternal/ComplexJobStage.png)
 
 所以划分算法就是：**从后往前推算，遇到 ShuffleDependency 就断开，遇到 NarrowDependency 就将其加入该 stage。每个 stage 里面 task 的数目由该 stage 最后一个 RDD 中的 partition 个数决定。**
 
@@ -41,11 +54,11 @@
 
 回想上一章里面 cartesian(otherRDD) 里面复杂的 NarrowDependency，图示如下：
 
-![cartesian](PNGfigures/Cartesian.png)
+![cartesian](/img/blog/sparkinternal/Cartesian.png)
 
 经过算法划分后结果如下：
 
-![cartesian](PNGfigures/cartesianPipeline.png)
+![cartesian](/img/blog/sparkinternal/cartesianPipeline.png)
 
 图中粗箭头展示了第一个 ResultTask，其他的 task 依此类推。由于该 stage 的 task 直接输出 result，所以这个图包含 6 个 ResultTasks。与 OneToOneDependency 不同的是这里每个 ResultTask 需要计算 3 个 RDD，读取两个 data block，而整个读取和计算这三个 RDD 的过程在一个 task 里面完成。当计算 CartesianRDD 中的 partition 时，需要从两个 RDD 获取 records，由于都在一个 task 里面，不需要 shuffle。这个图说明：**不管是 1:1 还是 N:1 的 NarrowDependency，只要是 NarrowDependency chain，就可以进行 pipeline，生成的 task 个数与该 stage 最后一个 RDD 的 partition 个数相同。**
 
@@ -54,7 +67,7 @@
 
 回到 ComplexJob 的物理执行图，如果按照 MapReduce 的逻辑，从前到后执行，map() 产生中间数据 map outpus，经过 partition 后放到本地磁盘。再经过 shuffle-sort-aggregate 后生成 reduce inputs，最后 reduce() 执行得到 result。执行流程如下：
 
-![MapReduce](PNGfigures/MapReduce.png)
+![MapReduce](/img/blog/sparkinternal/MapReduce.png)
 
 整个执行流程没有问题，但不能直接套用在 Spark 的物理执行图上，因为 MapReduce 的流程图简单、固定，而且没有 pipeline。
 

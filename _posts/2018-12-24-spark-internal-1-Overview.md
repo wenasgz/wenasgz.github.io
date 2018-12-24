@@ -1,7 +1,7 @@
 ---
 layout:     post
-title:      "Spark Internal —— Overview 篇"
-subtitle:   "Spark 内幕 SourceResearch"
+title:      "Spark Internal - Overview 篇"
+subtitle:   "概览"
 date:       2018-12-24
 author:     "JerryLead"
 header-img: "img/post-bg-os-metro.jpg"

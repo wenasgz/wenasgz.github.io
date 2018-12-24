@@ -1,3 +1,16 @@
+---
+layout:     post
+title:      "Spark Internal - Cache 和 Checkpoint 篇"
+subtitle:   "Cache 和 Checkpoint"
+date:       2018-12-24
+author:     "JerryLead"
+header-img: "img/post-bg-os-metro.jpg"
+catalog: true
+tags:
+  - Spark 内幕
+  - SourceResearch 
+---
+
 # Cache 和 Checkpoint
 作为区别于 Hadoop 的一个重要 feature，cache 机制保证了需要访问重复数据的应用（如迭代型算法和交互式应用）可以运行的更快。与 Hadoop MapReduce job 不同的是 Spark 的逻辑/物理执行图可能很庞大，task 中 computing
  chain 可能会很长，计算某些 RDD 也可能会很耗时。这时，如果 task 中途运行出错，那么 task 的整个 computing chain 需要重算，代价太高。因此，有必要将计算代价较大的 RDD checkpoint 一下，这样，当下游 RDD 计算出错时，可以直接从 checkpoint 过的 RDD 那里读取数据继续算。
@@ -7,9 +20,9 @@
 回到 Overview 提到的 GroupByTest 的例子，里面对 FlatMappedRDD 进行了 cache，这样 Job 1 在执行时就直接从 FlatMappedRDD 开始算了。可见 cache 能够让重复数据在同一个 application 中的 jobs 间共享。
 
 逻辑执行图：
-![deploy](PNGfigures/JobRDD.png)
+![deploy](/img/blog/sparkinternal/JobRDD.png)
 物理执行图：
-![deploy](PNGfigures/PhysicalView.png)
+![deploy](/img/blog/sparkinternal/PhysicalView.png)
 
 **问题：哪些 RDD 需要 cache？**
 
@@ -27,7 +40,7 @@
 
 调用 rdd.cache() 后， rdd 就变成 persistRDD 了，其 StorageLevel  为 MEMORY_ONLY。persistRDD 会告知 driver 说自己是需要被 persist 的。
 
-![cache](PNGfigures/cache.png)
+![cache](/img/blog/sparkinternal/cache.png)
 
 如果用代码表示：
 ```scala
@@ -51,7 +64,7 @@ blockManager 将 elements（也就是 partition） 存放到 memoryStore 管理�
 
 下次计算（一般是同一 application 的下一个 job 计算）时如果用到 cached RDD，task 会直接去 blockManager 的 memoryStore 中读取。具体地讲，当要计算某个 rdd 中的 partition 时候（通过调用 rdd.iterator()）会先去 blockManager 里面查找是否已经被 cache 了，如果 partition 被 cache 在本地，就直接使用 blockManager.getLocal() 去本地 memoryStore 里读取。如果该 partition 被其他节点上 blockManager cache 了，会通过 blockManager.getRemote() 去其他节点上读取，读取过程如下图。
 
-![cacheRead](PNGfigures/cacheRead.png)
+![cacheRead](/img/blog/sparkinternal/cacheRead.png)
 
 **获取 cached partitions 的存储位置：**partition 被 cache 后所在节点上的 blockManager 会通知 driver 上的 blockMangerMasterActor 说某 rdd 的 partition 已经被我 cache 了，这个信息会存储在 blockMangerMasterActor 的 blockLocations: HashMap中。等到 task 执行需要 cached rdd 的时候，会调用 blockManagerMaster 的 getLocations(blockId) 去询问某 partition 的存储位置，这个询问信息会发到 driver 那里，driver 查询 blockLocations 获得位置信息并将信息送回。
 

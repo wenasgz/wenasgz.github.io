@@ -1,3 +1,15 @@
+---
+layout:     post
+title:      "Spark Internal - Broadcast 篇"
+subtitle:   "Broadcast"
+date:       2018-12-24
+author:     "JerryLead"
+header-img: "img/post-bg-os-metro.jpg"
+catalog: true
+tags:
+  - Spark 内幕
+  - SourceResearch 
+---
 # Broadcast
 顾名思义，broadcast 就是将数据从一个节点发送到其他各个节点上去。这样的场景很多，比如 driver 上有一张表，其他节点上运行的 task 需要 lookup 这张表，那么 driver 可以先把这张表 copy 到这些节点，这样 task 就可以在本地查表了。如何实现一个可靠高效的 broadcast 机制是一个有挑战性的问题。先看看 Spark 官网上的一段话：
 
@@ -63,7 +75,7 @@ HttpBroadcast 是通过传统的 http 协议和 httpServer 去传 data，在 Tor
 
 下面讨论 TorrentBroadcast 的一些细节：
 
-![TorrentBroadcast](PNGfigures/TorrentBroadcast.png)
+![TorrentBroadcast](/img/blog/sparkinternal/TorrentBroadcast.png)
 
 #### driver 端：
 Driver 先把 data 序列化到 byteArray，然后切割成 BLOCK_SIZE（由 `spark.broadcast.blockSize = 4MB` 设置）大小的 data block，每个 data block 被 TorrentBlock 对象持有。切割完 byteArray 后，会将其回收，因此内存消耗虽然可以达到 2 * Size(data)，但这是暂时的。
