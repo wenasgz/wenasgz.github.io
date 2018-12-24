@@ -42,13 +42,13 @@ Doc Version: 1.0.2.0
 ## Contents
 本文档首先讨论 job 如何生成，然后讨论怎么执行，最后讨论系统相关的功能特性。具体内容如下：
 
-1. [Overview](https://github.com/JerryLead/SparkInternals/blob/master/markdown/1-Overview.md) 总体介绍
-2. [Job logical plan](https://github.com/JerryLead/SparkInternals/blob/master/markdown/2-JobLogicalPlan.md) 介绍 job 的逻辑执行图（数据依赖图）
-3. [Job physical plan](https://github.com/JerryLead/SparkInternals/blob/master/markdown/3-JobPhysicalPlan.md) 介绍 job 的物理执行图
-4. [Shuffle details](https://github.com/JerryLead/SparkInternals/blob/master/markdown/4-shuffleDetails.md) 介绍 shuffle 过程
-5. [Architecture](https://github.com/JerryLead/SparkInternals/blob/master/markdown/5-Architecture.md) 介绍系统模块如何协调完成整个 job 的执行
-6. [Cache and Checkpoint](https://github.com/JerryLead/SparkInternals/blob/master/markdown/6-CacheAndCheckpoint.md)  介绍 cache 和 checkpoint 功能
-7. [Broadcast](https://github.com/JerryLead/SparkInternals/blob/master/markdown/7-Broadcast.md) 介绍 broadcast 功能
+1. [Overview](https://wenasgz.github.io/2018/12/24/spark-internal-1-Overview.md) 总体介绍
+2. [Job logical plan](https://wenasgz.github.io/2018/12/24/spark-internal-2-JobLogicalPlan.md) 介绍 job 的逻辑执行图（数据依赖图）
+3. [Job physical plan](https://wenasgz.github.io/2018/12/24/spark-internal-3-JobPhysicalPlan.md) 介绍 job 的物理执行图
+4. [Shuffle details](https://wenasgz.github.io/2018/12/24/spark-internal-4-shuffleDetails.md) 介绍 shuffle 过程
+5. [Architecture](https://wenasgz.github.io/2018/12/24/spark-internal-5-Architecture.md) 介绍系统模块如何协调完成整个 job 的执行
+6. [Cache and Checkpoint](https://wenasgz.github.io/2018/12/24/spark-internal-6-CacheAndCheckpoint.md)  介绍 cache 和 checkpoint 功能
+7. [Broadcast](https://wenasgz.github.io/2018/12/24/spark-internal-7-Broadcast.md) 介绍 broadcast 功能
 8. Job Scheduling 尚未撰写
 9. Fault-tolerance 尚未撰写
 
