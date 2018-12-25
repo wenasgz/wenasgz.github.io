@@ -225,7 +225,7 @@ class LogisticRegressionTest {
 4. 在3的同时，即可通过DBService来更新数据库相应表JobInfo的状态；
 5. 在monitor.html界面，通过刷新按钮即可及时获取Hadoop任务状态（有相应的服务，见下文介绍），并更新数据库相关数据，返回前台所有任务信息；
 
-## 3.2.3 部分实现细节
+3.2.3 部分实现细节
 1. Spark提交任务
 参考《基于Spark ALS在线推荐系统》；
 
@@ -346,7 +346,7 @@ public static List<Object> updateJobInfo(List<Object> jobInfos)throws YarnExcept
 这里的工作就是根据数据库中任务的状态，只查询任务没有完成的任务的最新状态，并更新原始任务状态，最后把更新后的或者原始任务添加到list中，并返回；
 在代码清单3-3中，返回更新后的list后，接着调用了DBService.updateTableData,对数据进行固化；最后，使用subList对list进行截取，返回给前台某个分页的数据。
 
-4. Spark算法调用工程后续开发：
+# 4. Spark算法调用工程后续开发：
 不得不说，这个版本的工程还是没有开发完成的，那如果你想接着来开发，一般流程是怎样的呢？
 。。。
 1）编写src/main/java/下算法对应的Thread；
@@ -363,7 +363,7 @@ public static List<Object> updateJobInfo(List<Object> jobInfos)throws YarnExcept
 
 所以，如果你要在这个版本上开发，那么可以参考上面的流程先试着编写ALS算法的调用即可。
 
-5. 总结
+# 5. 总结
 1. Spark算法调用工程还有很多页面没有完成，这个是类似重复性工作，并没有难点需要克服；
 2. Spark算法调用工程中针对每个算法，本来是想在其算法调用界面加上其数据描述、算法描述、参数描述的，不过暂时还没有添加，but这些信息在Scala算法封装工程里面都有；
 3. 关于使用SPARK ON YARN的方式调用Spark算法，并使用YARN来管理任务的流程基本在Spark算法调用工程中体现淋漓尽致了，再多也玩不出花儿了，所以如果有想学习研究这块内容的，则工程是一个很好的参考；
