@@ -45,7 +45,8 @@ test／scala里面对应每个封装代码的测试；
   
   3.1.2 单个算法实现（封装／测试），比如针对逻辑回归
   1. 针对逻辑回归，其封装代码如下所示：
-  代码清单3-1 逻辑回归算法封装（Scala）  
+  代码清单3-1 逻辑回归算法封装（Scala） 
+   
 ```scala
 package com.fz.classification
 
@@ -112,6 +113,7 @@ object LogisticRegression {
   }
 }
 ```
+
 在上面的代码中，有对每个参数的解释，包括参数的含义，参数有哪些参数等；
 在Main函数中，首先对各个参数进行获取并赋值变量，接着就是获取SparkContext；
 其中，最重要的部分就是调用Spark自己封装的LogisticRegressionWithSGD 或 LogisticRegressionWithBFGS类进行逻辑回归建模；
@@ -121,6 +123,7 @@ object LogisticRegression {
  2. 测试
 测试主要使用JUnit进行测试，其逻辑回归示例代码如下：
 代码清单3-2 逻辑回归算法封装测试（Scala）
+
 ```scala
 package com.fz.classification
 
@@ -179,6 +182,7 @@ class LogisticRegressionTest {
   }
 }
 ```
+
 这里面的方法都是第一步先构建算法参数；接着调用main方法；第三步，查看输出中是否具有模型的相关信息；
 当然，这里面还可以添加多个测试方法，使用不同的算法参数或数据进行测试；（读者可自行添加）
 
@@ -233,6 +237,7 @@ monitor实时查询任务状态列表其流程描述如下：
 4） 根据row和page字段分页返回JSON数据；
 其代码如下所示：
 代码清单3-3 更新监控任务列表
+
 ```scala
 public void getJobInfo(){
         Map<String ,Object> jsonMap = new HashMap<String,Object>();
@@ -259,8 +264,10 @@ public void getJobInfo(){
         Utils.write2PrintWriter(JSON.toJSONString(jsonMap));
     }
  ```
+ 
 第一步通过dBService获取给定records个记录；第二步则更新这些记录；看下HUtils.updateJobInfo的实现：
 代码清单3-4 获取任务最新状态
+
 ```scala
 public static List<Object> updateJobInfo(List<Object> jobInfos)throws YarnException,IOException{
         List<Object> list = new ArrayList<>();
@@ -335,6 +342,7 @@ public static List<Object> updateJobInfo(List<Object> jobInfos)throws YarnExcept
         return list;
     }
 ```
+
 这里的工作就是根据数据库中任务的状态，只查询任务没有完成的任务的最新状态，并更新原始任务状态，最后把更新后的或者原始任务添加到list中，并返回；
 在代码清单3-3中，返回更新后的list后，接着调用了DBService.updateTableData,对数据进行固化；最后，使用subList对list进行截取，返回给前台某个分页的数据。
 
