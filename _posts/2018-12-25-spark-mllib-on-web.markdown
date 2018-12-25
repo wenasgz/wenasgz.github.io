@@ -373,18 +373,11 @@ public static List<Object> updateJobInfo(List<Object> jobInfos)throws YarnExcept
 7. 关于前台页面展现，我也是比较弱的，所以界面风格或单页的相关信息显示之类的，看着还不能做到赏心悦目；
 8. The Code is free ，just enjoy！
 
-
-
 分享，成长，快乐
-
-
 脚踏实地，专注
-
-
 转载请注明blog地址：http://blog.csdn.net/fansy1990
 --------------------- 
 作者：fansy1990 
 来源：CSDN 
 原文：https://blog.csdn.net/fansy1990/article/details/62238078 
 版权声明：本文为博主原创文章，转载请附上博文链接！
-
